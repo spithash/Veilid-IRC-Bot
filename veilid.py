@@ -19,7 +19,7 @@ def create_ssl_socket():
     return ssl_socket
 
 def execute_veilid_dht_get(hash_value, subkey):
-    command = f'/home/user/veilidbot/veilid-dht-get {hash_value} {subkey}'
+    command = f'/home/user/veilidbot/veilid-dht-get {hash_value}/{subkey}'
     try:
         print(f"{BLUE}Executing command: {command}{ENDC}")
 
