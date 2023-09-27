@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+if [ "$1" == "" -o "$1" == "--help" -o "$1" == "-h" ];then
+  printf 'usage: veilid-dht-get <key> [<subkey>]\n'
+  exit 1
+fi
+
+if [ "$1" != "socat" ];then
+  ### deal with arguments in here and export them
+  export key="$(printf "%s" "$1" | cut -d/ -f1 | sed 's/^VLD0://i')"
+  if grep '/' <<< "$1" 2>&1 >/dev/null;then
+    export subkey="$(printf "%s\n" "$1" | cut -d/ -f2-)"
+  else
+    export subkey=0
+  fi
+#  echo "key: $key"
+#  echo "subkey: $subkey"
+  exec ncat 127.0.0.1 5959 -c "$0 socat" 2>&1
+else
+  shift
+fi
+
+printf '{"op":"NewRoutingContext"}\n'
+state=0
+stdbuf -oL jq -nc 'inputs | select(.type != "Update")' | while read -r line;do
+  #type="$(jq -r .type <<< "$line")"
+  #if [ "$type" == "Update" ];then
+  #  continue
+  #fi
+  #printf 'resp: %s\n' "$line" >&2
+  case "$state" in
+    0)
+      rc_id="$(jq -r .value <<< "${line}")"
+      printf '{"op":"RoutingContext","rc_id":%d,"rc_op":"OpenDhtRecord","key":"%s"}\n' "${rc_id}" "${key}"
+    ;;
+    1)
+      error="$(jq -r '.error.kind//""' <<< "$line")"
+      if [ "$error" ];then
+        printf '\nQUIT :what? this isnt woodshop?\r\n'
+      else
+        printf '{"op":"RoutingContext","rc_id":%d,"rc_op":"GetDhtValue","key":"%s","subkey":%d,"force_refresh":true}\n' "${rc_id}" "${key}" "${subkey}"
+      fi
+    ;;
+    2)
+      error="$(jq -r '.error.kind//""' <<< "$line")"
+      if [ "$error" ];then
+        printf '{"op":"RoutingContext","rc_id":%d,"rc_op":"GetDhtValue","key":"%s","subkey":%d,"force_refresh":false}\n' "${rc_id}" "${key}" "${subkey}"
+      else
+        jq -r '.value.data//""' <<< "$line" | tr -d '\n' | ./deb64url >&2
+        printf '\n' >&2 #just because it is weird not having a newline at the end of stuff.
+        printf '{"op":"RoutingContext","rc_id":%d,"rc_op":"CloseDhtRecord","key":"%s"}\n' "${rc_id}" "${key}"
+        printf '\nQUIT :what? this isnt woodshop?\r\n'
+      fi
+    ;;
+    3)
+      error="$(jq -r '.error.kind//""' <<< "$line")"
+      if [ "$error" ];then
+        printf '{"op":"RoutingContext","rc_id":%d,"rc_op":"GetDhtValue","key":"%s","subkey":%d,"force_refresh":false}\n' "${rc_id}" "${key}" "${subkey}"
+      else
+        jq -r '.value.data//""' <<< "$line" | tr -d '\n' | deb64url >&2
+        printf '\n' >&2 #just because it is weird not having a newline at the end of stuff.
+        printf '{"op":"RoutingContext","rc_id":%d,"rc_op":"CloseDhtRecord","key":"%s"}\n' "${rc_id}" "${key}"
+      fi
+      printf '\nQUIT :what? this isnt woodshop?\r\n'
+    ;;
+    *)
+      echo 'state: ' "$state" >&2
+    ;;
+  esac
+  state=$[$state+1]
+done #| tee /dev/stderr
