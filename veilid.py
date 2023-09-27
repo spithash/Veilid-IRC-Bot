@@ -73,7 +73,7 @@ def main():
                 print(f"{YELLOW}Received PING, responding with PONG{ENDC}")
                 irc_socket.sendall(f"PONG {message.split()[1]}\r\n".encode())
                 continue
-            if re.match(r"^:.*!.*@.* PRIVMSG #\w+ :!record get .+$", message):
+            if re.match(r"^:.*!.*@.* PRIVMSG #\w+ :!record get [A-Z0-9a-z_-]+ [0-9]+$", message):
                 if valid_command_executed:
                     print(f"{PURPLE}Ignoring additional command{ENDC}")
                     continue
