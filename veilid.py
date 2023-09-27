@@ -6,7 +6,7 @@ import re
 # Define ANSI escape codes for colors
 GREEN = '\033[32m'
 PURPLE = '\033[95m'
-BLUE = '\033[34m'
+BLUE = '\033[94m'
 YELLOW = '\033[33m'
 ENDC = '\033[0m'
 
