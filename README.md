@@ -8,3 +8,4 @@ Keep all the files in one directory.
 
 Huge shoutout at epoch@Libera for the bash scripts!  
 Find us in #veilid  
+![Veilid IRC Bot](https://raw.githubusercontent.com/spithash/trunk/master/2023-09-27_20-32.png)
