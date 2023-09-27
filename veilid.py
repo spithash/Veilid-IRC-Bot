@@ -88,6 +88,9 @@ def main():
                 output = execute_veilid_dht_get(hash_value, subkey)
                 print(f"Output from execute_veilid_dht_get: {output}")
                 irc_socket.sendall(f"PRIVMSG {parts[2]} :{output}\r\n".encode())
+                
+                # Reset valid_command_executed
+                valid_command_executed = False
 
         except Exception as e:
             print(f"Error: {e}")
