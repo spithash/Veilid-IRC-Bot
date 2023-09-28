@@ -2,6 +2,7 @@ import socket
 import ssl
 import subprocess
 import re
+import time
 
 # Define ANSI escape codes for colors
 GREEN = '\033[32m'
@@ -91,9 +92,26 @@ def main():
                 
                 # Reset valid_command_executed
                 valid_command_executed = False
+        except socket.error as e:
+            print(f"Socket error: {e}")
+            print(f"Reconnecting in 10 seconds...")
+            time.sleep(10)
+            try:
+                irc_socket = create_ssl_socket()
+                irc_socket.connect(("irc.libera.chat", 6697))
+                irc_socket.sendall(f"PASS {password}\r\n".encode())
+                irc_socket.sendall(f"NICK {nickname}\r\n".encode())
+                irc_socket.sendall(f"USER {username} 0 * :{nickname}\r\n".encode())
+                irc_socket.sendall(f"MODE {nickname} +RZiw\r\n".encode())
 
-        except Exception as e:
-            print(f"Error: {e}")
+                for channel in channels:
+                    irc_socket.sendall(f"JOIN {channel}\r\n".encode())
+
+                irc_socket.sendall(f"PRIVMSG NickServ :IDENTIFY {nickname} {password}\r\n".encode())
+
+            except Exception as e:
+                print(f"Reconnection failed: {e}")
+                continue
 
 if __name__ == "__main__":
     main()
