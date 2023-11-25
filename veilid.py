@@ -43,7 +43,7 @@ def execute_veilid_dht_get(hash_value, subkey):
 
 def main():
     username = "username"
-    password = "YourStongPassword"
+    password = "YourStrongPassword"
     nickname = "VeilidRulez"
     channels = ["#veilid", "#test2"]  # List of channels
 
